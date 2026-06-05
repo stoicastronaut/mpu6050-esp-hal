@@ -19,57 +19,8 @@ pub const PI_180: f32 = PI / 180.0;
 #[derive(Debug)]
 pub enum Mpu6050Error<E> {
     I2c(E),
-
     InvalidChip(u8),
 }
-
-#[derive(Debug)]
-pub struct Mpu6050Builder<I2C> {
-    i2c: I2C,
-    slave_addr: MpuRegister,
-    accel_range: AccelRange,
-    gyro_range: GyroRange,
-}
-
-impl<I2C> Mpu6050Builder<I2C>
-where
-    I2C: I2c,
-
-{
-    pub fn new(i2c: I2C) -> Self {
-        Self {
-            i2c,
-            slave_addr: DEFAULT_SLAVE_ADDR,
-            accel_range: AccelRange::G2,
-            gyro_range: GyroRange::D250,
-        }
-    }
-
-    pub fn with_addr(mut self, addr: MpuRegister) -> Self {
-        self.slave_addr = addr;
-        self
-    }
-
-    pub fn with_accel_range(mut self, range: AccelRange) -> Self {
-        self.accel_range = range;
-        self
-    }
-
-    pub fn with_gyro_range(mut self, range: GyroRange) -> Self {
-        self.gyro_range = range;
-        self
-    }
-
-    pub fn build(self) -> Mpu6050<I2C> {
-        Mpu6050 { 
-            i2c: self.i2c,
-            slave_addr: self.slave_addr,
-            acc_sensivity: self.accel_range,
-            gyro_sensivity: self.gyro_range
-        }
-    }
-}
-
 
 #[derive(Debug)]
 pub struct Mpu6050<I2C> {
@@ -83,6 +34,35 @@ impl<I2C> Mpu6050<I2C>
 where
     I2C: I2c,
 {
+    // MPU Instantiation Functions
+    pub fn new(i2c: I2C) -> Result<Self, Mpu6050Error<I2C::Error>> {
+        Ok(
+            Self {
+                i2c,
+                slave_addr: DEFAULT_SLAVE_ADDR,
+                acc_sensivity: AccelRange::G2,
+                gyro_sensivity: GyroRange::D250,
+            }
+        )
+    }
+
+    pub fn with_addr(mut self, addr: MpuRegister) -> Self {
+        self.slave_addr = addr;
+        self
+    }
+
+    pub fn with_accel_range(mut self, range: AccelRange) -> Self {
+        self.acc_sensivity = range;
+        self
+    }
+
+    pub fn with_gyro_range(mut self, range: GyroRange) -> Self {
+        self.gyro_sensivity = range;
+        self
+    }
+
+    // Initialization Functions
+
     pub fn init(&mut self) -> Result<(), Mpu6050Error<I2C::Error>> {
         self.wake()?;
         self.verify()?;
@@ -254,5 +234,4 @@ where
         Ok(())
     }
 }
-
 
